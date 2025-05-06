@@ -1,1 +1,1 @@
-# ecommerce-data-visualization-project
+# Ecommerce-data-visualization-project
