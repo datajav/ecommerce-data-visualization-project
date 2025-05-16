@@ -45,12 +45,21 @@ Highlight real-world use cases:
 ✔ Geographic Expansion Insights
 Future Enhancements
 
-Future Enhancements:
+Recommendations
+Based on the analysis, propose actionable recommendations:
 
-Predictive Analytics for customer churn
-Sentiment Analysis of customer reviews
-Cohort Analysis for purchase behaviors
-Tools & Technologies:
+1. Improve Customer Retention Strategies
+Offer personalized promotions based on purchasing behavior.
+Implement a loyalty program targeting high-value returning customers.
+Address low review scores by identifying common customer pain points.
+
+2. Optimize Marketing Efforts
+Focus marketing campaigns on top-performing age segments.
+Enhance regional targeting by investing in locations with high sales growth.
+
+3. Streamline Product Offerings
+Prioritize stocking best-selling products and discontinue underperforming items.
+Enhance pricing strategies based on demand analysis and customer spending habits.
 
 Microsoft Power BI Desktop
 DAX (Data Analysis Expressions)
