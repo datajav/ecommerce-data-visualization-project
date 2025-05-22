@@ -26,7 +26,11 @@ With creating this dashboard here are the findings identifed for each metric. Th
 
 ![image](https://github.com/user-attachments/assets/3f7957dc-d9f4-49d6-af23-e2f813be394d)
 
-*Electronics* contributed the most to overall sales. Customers typically spent $87.76 per order, indicating a stable purchase behavior. The highest spending age bracket was 60-70, showing stronger purchasing power. Female customers made %44.56 more purchases, influencing targeted promotions. We can See as well the the Top Performing Cities: East Robert, South Tonya, Port Melissaborough generated the most revenue.
+*Electronics* contributed the most to overall sales. 
+
+![image](https://github.com/user-attachments/assets/b61db39e-67f6-42d8-83bf-a88d5577d850)
+
+Customers typically spent $87.76 per order, indicating a stable purchase behavior. The highest spending age bracket was 60-70, showing stronger purchasing power. Female customers made %44.56 more purchases, influencing targeted promotions. We can See as well the the Top Performing Cities: East Robert, South Tonya, Port Melissaborough generated the most revenue.
 
 Average Review Score: Customers rated products 3.99/5 on average, indicating reletively positive feedback.
 
