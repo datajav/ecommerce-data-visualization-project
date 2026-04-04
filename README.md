@@ -83,3 +83,8 @@ DAX (Data Analysis Expressions)
 Power Query M Language
 Data visualization best practices
 Python Data Wrangler
+
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
