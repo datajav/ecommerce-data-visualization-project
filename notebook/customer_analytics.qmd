@@ -1,0 +1,288 @@
+---
+jupyter: python3
+---
+
+```{python}
+#Importing necessary libraries
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import matplotlib.gridspec as gridspec
+import seaborn as sns
+import os 
+from sklearn.preprocessing import StandardScaler, LabelEncoder
+from sklearn.cluster import KMeans
+from sklearn.decomposition import TruncatedSVD
+from sklearn.metrics import silhouette_score
+from sklearn.metrics import silhouette_score
+from sklearn.metrics.pairwise import cosine_similarity
+PALETTE = ["#e27c7c","#a86464","#6d4b4b","#503f3f","#333333","#3c4e4b","#466964", "#599e94"]
+PALETTE2 = ["#003f5c","#31497e","#674f95","#a14e9a","#d44c8d","#f9596f","#ff7a47", "#ffa600"]
+```
+
+```{python}
+#Create output directory if it doesn't exist
+os.makedirs("output", exist_ok=True)
+```
+
+```{python}
+#Importing the dataset, cleaning and feature engineering
+customer_df = pd.read_csv("C:/Users/Javaughn/Documents/GitHub/ecommerce-data-visualization-project/synthetic_online_retail_data.csv")
+ 
+customer_df.head
+
+customer_df["order_date"] = pd.to_datetime(customer_df["order_date"], errors='coerce')
+customer_df["review_score"] = customer_df["review_score"].fillna(0)
+customer_df["gender"] = customer_df["gender"].fillna(customer_df["gender"].mode()[0])
+
+customer_df["revenue"] = customer_df["quantity"] * customer_df["price"]
+
+print(f" Data Loaded - {len(customer_df):,}transactions | {customer_df['customer_id'].nunique()} unique customers")
+print(f" Date Range: {customer_df['order_date'].min().date()} -> {customer_df['order_date'].max().date()}")
+print(f" NaNs remaining: {customer_df.isnull().sum().sum()}")
+print(customer_df.head(3).to_string(index=False))
+```
+
+```{python}
+# Define the snapshot date
+snapshot = customer_df["order_date"].max() + pd.Timedelta(days=1)
+```
+
+```{python}
+#Calculate RFM features
+rfm = (customer_df.groupby("customer_id")).agg(
+        recency = ("order_date", lambda x: (snapshot - x.max()).days), 
+        frequency = ("product_id", "nunique"), 
+        monetary = ("revenue", "sum"), 
+        avg_review = ("review_score", "mean"), 
+        avg_qty = ("quantity", "mean"), 
+        age = ("age", "first")
+    ).reset_index()
+
+print(f" RFM table - {rfm.shape[0]} customers")
+print(rfm.describe().round(2).to_string())
+```
+
+```{python}
+#Kmeans clustering section
+features = ["recency", "frequency", "monetary", "avg_review", "avg_qty", "age"]
+X = rfm[features].values
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+
+#Elbow method to find optimal k
+inertia, sil_scores = [], []
+K_range = range(2, 9)
+for k in K_range: 
+    km = KMeans(n_clusters=k, random_state=42, n_init=10)
+    km.fit(X_scaled)
+    inertia.append(km.inertia_)
+    sil_scores.append(silhouette_score(X_scaled, km.labels_))
+
+optimal_k = K_range[np.argmin(inertia)]
+print(f"\n Optimal K = {optimal_k} (silhouette = max {max(sil_scores):.3f})")
+```
+
+```{python}
+#Final Model
+kmeans = KMeans(n_clusters=optimal_k, random_state=42, n_init=10)
+rfm["cluster"] = kmeans.fit_predict(X_scaled)
+```
+
+```{python}
+# Auto-label segments by descending avg monetary value
+cluster_means = rfm.groupby("cluster")["monetary"].mean().sort_values(ascending=False)
+LABELS = ["Champions","Loyal Customers","At-Risk","Hibernating",
+          "New Customers","Potential Loyalists","Lost"]
+
+if len(cluster_means) > len(LABELS):
+    LABELS += [f"Segment {i+1}" for i in range(len(LABELS), len(cluster_means))]
+
+label_map = {c: LABELS[i] for i, c in enumerate(cluster_means.index)}
+rfm["segment"] = rfm["cluster"].map(label_map)
+ 
+seg_summary = (rfm.groupby("segment")
+                  .agg(
+                      customers   = ("customer_id","count"),
+                      avg_recency = ("recency",   "mean"),
+                      avg_freq    = ("frequency", "mean"),
+                      avg_revenue = ("monetary",  "mean"),
+                      avg_review  = ("avg_review","mean"),
+                  ).round(1))
+print("Segment Summary:")
+print(seg_summary.to_string())
+```
+
+```{python}
+#Collaborative Filtering - User-Item Matrix
+utility = customer_df.groupby(["customer_id", "category_name"])["review_score"].mean().unstack(fill_value=0)
+
+n_components = min(10, utility.shape[1]-1)
+svd = TruncatedSVD(n_components=n_components, random_state=42)
+                   
+U = svd.fit_transform(utility.values)
+reconstructed = np.dot(U, svd.components_)
+pred_df = pd.DataFrame(reconstructed, index=utility.index, columns=utility.columns)
+
+print(pred_df)
+```
+
+```{python}
+def recommend_categories(customer_id: int, top_n: int =3) -> list: 
+    if customer_id not in pred_df.index:
+        return[]
+    scores = pred_df.loc[customer_id]
+    purchased_cats = set(customer_df[customer_df["customer_id"] == customer_id]["category_name"])
+    unseen = scores.drop(labels=list(purchased_cats), errors="ignore")
+    return unseen.nlargest(top_n).index.tolist()
+
+
+```
+
+```{python}
+def recommend_products(customer_id: int, top_n: int = 5) -> pd.DataFrame:
+    cats = recommend_categories(customer_id, top_n=3)
+    recs = []
+    for cat in cats:
+        cat_prods = (customer_df[customer_df["category_name"] == cat]
+                    .groupby("product_name")
+                    .agg(avg_rating=("review_score", "mean"),
+                        times_ordered=("order_date", "count"))
+                    .reset_index())
+        cat_prods["category"] = cat
+        recs.append(cat_prods)
+    if not recs:
+        return pd.DataFrame()
+    return (pd.concat(recs)).sort_values(["avg_rating", "times_ordered"], ascending=False).head(top_n)[["product_name", "category", "avg_rating", "times_ordered"]].reset_index(drop=True)      
+```
+
+```{python}
+#demo
+demo_id = customer_df["customer_id"].iloc[0]
+print(f"\n Sample Recommendations for customer{demo_id}:")
+print(recommend_products(demo_id).to_string(index=False))
+```
+
+```{python}
+#Visualizations K-means: Elbow Method and Silhouette Score
+
+fig, axes = plt.subplots(1, 2, figsize=(12, 4))
+fig.suptitle("K-means: Elbow Method and Silhouette Score")
+
+axes[0].plot(list(K_range), inertia, "o-", color=PALETTE[0], lw=2)
+axes[0].axvline(optimal_k, ls="--", color=PALETTE[2], label=f"Optimal K={optimal_k}")
+axes[0].set(xlabel="Number of Clusters (K)", ylabel="inertia", title="Elbow Method")
+axes[0].legend()
+
+axes[1].plot(list(K_range), sil_scores, "s-", color=PALETTE[1], lw=2)
+axes[1].axvline(optimal_k, ls="--", color=PALETTE[2], label=f"Optimal K={optimal_k}")
+axes[1].set(xlabel="Number of Clusters (K)", ylabel="Silhouette Score", title="Elbow Method")
+axes[1].legend()
+
+```
+
+```{python}
+#Customer Segment Distribution
+seg_counts = rfm["segment"].value_counts()
+fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+fig.suptitle ("Customer Segment Dist", fontsize=14, fontweight="bold")
+
+seg_counts.plot(kind="bar", ax=axes[0], color=PALETTE2[:len(seg_counts)], edgecolor="white")
+axes[0].set(title="Customers Per Segment", xlabel="Segment", ylabel="Count")
+axes[0].tick_params(axis="x", rotation=30)
+
+axes[1].pie(seg_counts, labels=seg_counts.index, autopct="%1.1f%%",
+            colors=PALETTE[:len(seg_counts)], startangle=140, 
+            wedgeprops={"edgecolor":"white", "linewidth":1.5})
+axes[1].set_title("Segment Share")
+
+
+
+```
+
+```{python}
+#Segment Profile Heatmap
+heat_data = (rfm.groupby("segment")[features]
+             .mean()
+             .apply(lambda c: (c - c.min()) / (c.max() - c.min() + 1e-9)))
+
+fig, ax = plt.subplots(figsize=(10,5))
+sns.heatmap (heat_data, annot=True, fmt=".2f", cmap="RdYlGn", 
+            linewidths=0.5, ax=ax, cbar_kws={"label":"Normalized Score"})
+ax.set_title("Segment Profile Heatmap(normalised features)", fontsize=13, fontweight="bold")
+
+```
+
+```{python}
+#Collabrative Filtering = SVD Explained Variance
+cumvar = np.cumsum(svd.explained_variance_ratio_)
+fig, ax = plt.subplots(figsize=(8, 4))
+ax.bar(range(1, len(cumvar)+1), svd.explained_variance_ratio_, 
+       color=PALETTE[0], alpha=0.7,label="Per Component")
+ax.plot(range(1, len(cumvar)+1),cumvar, "o-", color=PALETTE[2], lw=2,label="Cumulative")
+ax.axhline(0.8, ls="--", color="blue", lw=1, label="80% Threshold")
+ax.set(xlabel="SVD Component", ylabel="Explained Variance Ratio", title="Collabrative Filtering = SVD Explained Variance")
+ax.legend()
+```
+
+```{python}
+#Category Revenue Mix bu Segment
+dataf_seg = customer_df.merge(rfm[["customer_id","segment"]], on="customer_id")
+cat_seg = dataf_seg.groupby(["segment", "category_name"])["revenue"].sum().unstack(fill_value=0)
+cat_norm = cat_seg.div(cat_seg.sum(axis=1), axis=0)
+
+fig, ax = plt.subplots(figsize=(13, 6))
+cat_norm.plot(kind="bar", stacked=True, ax=ax, colormap="plasma", edgecolor="white", width=0.75)
+ax.set(title="Category Revenue Mix by Segment", xlabel="Segment", ylabel="Revenue Share")
+ax.tick_params(axis="x", rotation=30)
+ax.legend(title="Category", bbox_to_anchor=(1.01,1), loc="upper left", fontsize=8)
+```
+
+```{python}
+#Collaborative filtering Table
+sample_ids = customer_df["customer_id"].unique()[:8]
+rec_rows = []
+for cid in sample_ids: 
+    cats = recommend_categories(cid, top_n=2)
+    rec_rows.append({"Customer ID":cid, 
+                     "Top Recommended Categories": ", ".join(cats) if cats else "N/A"})
+rec_table = pd.DataFrame(rec_rows)
+
+fig, ax = plt.subplots(figsize=(9, 3.5))
+ax.axis("off")
+tbl = ax.table(cellText=rec_table.values, colLabels=rec_table.columns, 
+               cellLoc="left", loc="center", colWidths=[0.25, 0.75])
+tbl.auto_set_font_size(False)
+tbl.set_fontsize(10)
+tbl.scale(1, 1.6)
+for (r, c), cell in tbl.get_celld().items():
+    if r == 0:
+        cell.set_facecolor(PALETTE2[0])
+        cell.set_text_props(color="white", fontweight="bold")
+    elif r % 2 == 0:
+        cell.set_facecolor("#F0F0FF")
+ax.set_title("Collaborative Filtering - Sample Recommendation", fontsize=13, fontweight="bold", pad=16)
+```
+
+```{python}
+#Review score by Gender
+fig, ax = plt.subplots(figsize=(9, 5))
+gender_order = customer_df["gender"].value_counts().index.tolist()
+sns.countplot(data=customer_df, x="review_score", hue="gender", 
+              hue_order=gender_order, palette=PALETTE2 [:len(gender_order)], ax=ax)
+ax.set(title="Review Score Distribution by Score",
+              xlabel="Review Score", ylabel="Count")
+ax.legend(title="Gender")
+```
+
+```{python}
+#Monthly Revenue Trend
+customer_df["month"] = customer_df["order_date"].dt.to_period("M")
+monthly = customer_df.groupby("month")["revenue"].sum().reset_index()
+monthly["month_str"] = monthly["month"].astype(str)
+
+fig, ax = plt.subplots(figsize=(13, 5))
+ax.fill_between(monthly["month_str"], monthly["revenue"], alpha=0.25, color="blue")
+ax.set(title="Monthly Revenue Trend", xlabel="Month", ylabel="Revenue")
+```
+
