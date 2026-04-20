@@ -1,90 +1,157 @@
-# Ecommerce-data-visualization-project
+# 🛒 E-Commerce Customer Analytics Dashboard
 
-E-commerce Customer Analytics Dashboard
-Project Overview
-This repository contains a comprehensive data analytics project which analyzes customer behavior and sales performance using Power BI for visualization and Python for data preprocessing. It utilizes a synthetic e-commerce dataset with customer demographics, transaction details, product information, and customer reviews to generate actionable business insights.
+> A full-stack analytics project combining Python-powered data preprocessing and a customer segmentation engine with Power BI for interactive business intelligence — built on a synthetic e-commerce dataset.
 
-Customer demographics (ID, gender, age)
-Product information (ID, name, category)
-Transaction details (order date, quantity, price)
-Customer experience metrics (payment method, review score)
-Geographic information (city)
+---
 
-Analysis Scope
+## 📌 Project Overview
 
-This dashboard provides multi-dimensional insights into:
+This repository delivers a comprehensive customer behavior and sales performance analysis pipeline. It ingests a synthetic e-commerce dataset across four key dimensions and transforms it into actionable business insights via an interactive Power BI dashboard.
 
-Sales Overview (Revenue trends & order volume)
-Customer Demographics (Age & gender segmentation)
-Geographic Analysis (Sales distribution by city/region)
-Product Performance (Top-selling categories & products)
-Customer Satisfaction & Loyalty (Review scores & retention metrics)
+| Data Layer | Fields |
+|---|---|
+| 👤 Customer Demographics | Customer ID, gender, age |
+| 🛍️ Product Information | Product ID, name, category |
+| 🧾 Transaction Details | Order date, quantity, price |
+| ⭐ Customer Experience | Payment method, review score, city |
 
-Executive Summary 
+---
 
-With creating this dashboard here are the findings identifed for each metric. The highest quantity of items were sold in December 2024.
+## 🔬 Analysis Scope
 
-![image](https://github.com/user-attachments/assets/3f7957dc-d9f4-49d6-af23-e2f813be394d)
+The dashboard delivers multi-dimensional insights across five areas:
 
-*Electronics* contributed the most to overall sales. 
+- **Sales Overview** — Revenue trends and order volume over time
+- **Customer Demographics** — Age group and gender segmentation
+- **Geographic Analysis** — Sales distribution by city and region
+- **Product Performance** — Top-selling categories and individual products
+- **Customer Satisfaction & Loyalty** — Review scores and retention metrics
 
-![image](https://github.com/user-attachments/assets/b61db39e-67f6-42d8-83bf-a88d5577d850)
+---
 
-Customers typically spent $87.76 per order, indicating a stable purchase behavior. The highest spending age bracket was 60-70, showing stronger purchasing power. Female customers made %44.56 more purchases, influencing targeted promotions. We can See as well the the Top Performing Cities: East Robert, South Tonya, Port Melissaborough generated the most revenue.
+## 🧠 Customer Segmentation Engine *(Jupyter Notebook)*
 
-Average Review Score: Customers rated products 3.99/5 on average, indicating reletively positive feedback.
+A standalone segmentation engine was built in Jupyter Notebook to classify customers into meaningful behavioral segments, feeding directly into the Power BI dashboard.
 
-![image](https://github.com/user-attachments/assets/18baa571-5546-4995-a887-72ef7a483cc7)
+**What it does:**
+- Groups customers by purchasing frequency, spend, and recency (RFM-style logic)
+- Creates labeled segments such as high-value returners, one-time buyers, and at-risk customers
+- Outputs a clean `.csv` that Power BI consumes for segment-level filtering and visuals
 
+**Key steps in the notebook:**
+```
+1. Load & clean raw transaction data
+2. Engineer RFM-style features per customer
+3. Apply segmentation logic (binning / clustering)
+4. Assign segment labels and export to /data/customer_segments.csv
+```
 
-Technical Implementation
+> 📓 See [`notebooks/customer_segmentation.ipynb`](notebooks/customer_segmentation.ipynb) for the full implementation.
 
-Data Cleaning: Removing duplicates, handling missing values with Data Wrangler.
-Feature Engineering: Creating calculated fields like Age Groups or Customer Segments.
-Statistical Analysis: Using Pandas & NumPy for deeper insights.
-Export to Power BI: Processed data is saved as a .csv for Power BI import
+---
 
-Key Visualizations:
+## 📊 Executive Summary
 
-Time-series analysis of sales performance
-Geographic distribution maps
-Product category treemaps
-Customer demographic breakdowns
-Review score distribution analysis
-Payment method comparison
-Business Applications
+Key findings surfaced from the analysis:
 
-Highlight real-world use cases:
+| Metric | Finding |
+|---|---|
+| 📅 Peak Sales Month | December 2024 recorded the highest item quantities sold |
+| 🏆 Top Category | Electronics contributed the most to overall revenue |
+| 💳 Avg. Order Value | $87.76 — indicating stable, consistent purchase behavior |
+| 👴 Top Spending Bracket | Age 60–70 showed the strongest purchasing power |
+| 🚺 Gender Breakdown | Female customers made 44.56% more purchases |
+| 🏙️ Top Cities | East Robert, South Tonya, and Port Melissaborough led in revenue |
+| ⭐ Avg. Review Score | 3.99 / 5 — reflecting relatively positive customer feedback |
 
-✔ Targeted Marketing Strategies
-✔ Customer Retention Optimization
-✔ Product Demand Forecasting
-✔ Geographic Expansion Insights
-Future Enhancements
+---
 
-Recommendations
-Based on the analysis, propose actionable recommendations:
+## 🛠️ Technical Implementation
 
-1. Improve Customer Retention Strategies
-Offer personalized promotions based on purchasing behavior.
-Implement a loyalty program targeting high-value returning customers.
-Address low review scores by identifying common customer pain points.
+### Python Pipeline
 
-2. Optimize Marketing Efforts
-Focus marketing campaigns on top-performing age segments.
-Enhance regional targeting by investing in locations with high sales growth.
+```
+Raw Data → Data Wrangler → Feature Engineering → Statistical Analysis → CSV Export → Power BI
+```
 
-3. Streamline Product Offerings
-Prioritize stocking best-selling products and discontinue underperforming items.
-Enhance pricing strategies based on demand analysis and customer spending habits.
+| Step | Tool | Details |
+|---|---|---|
+| Data Cleaning | Data Wrangler | Remove duplicates, handle missing values |
+| Feature Engineering | Pandas | Age groups, customer segments, calculated fields |
+| Statistical Analysis | Pandas, NumPy | Deeper behavioral insights |
+| Segmentation Engine | Scikit-learn / custom logic | RFM-based customer classification |
+| Export | Pandas `.to_csv()` | Processed data piped into Power BI |
 
-Microsoft Power BI Desktop
-DAX (Data Analysis Expressions)
-Power Query M Language
-Data visualization best practices
-Python Data Wrangler
+### Power BI Layer
 
+- DAX (Data Analysis Expressions) for calculated measures
+- Power Query M Language for data transformation
+- Data visualization best practices for executive-facing reporting
 
----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+---
 
+## 📈 Key Visualizations
 
+- 📉 Time-series analysis of sales performance
+- 🗺️ Geographic distribution maps
+- 🌳 Product category treemaps
+- 👥 Customer demographic breakdowns
+- ⭐ Review score distribution analysis
+- 💳 Payment method comparison
+
+---
+
+## 💼 Business Applications
+
+| Use Case | Description |
+|---|---|
+| 🎯 Targeted Marketing | Segment-driven campaign personalization |
+| 🔄 Customer Retention | Loyalty programs for high-value returning customers |
+| 📦 Demand Forecasting | Predict product demand by category and region |
+| 🌍 Geographic Expansion | Identify high-growth cities for investment |
+
+---
+
+## 🚀 Recommendations
+
+### 1. Improve Customer Retention
+- Offer personalized promotions based on purchasing behavior from the segmentation engine
+- Implement a loyalty program targeting high-value returning customers
+- Address low review scores by identifying common customer pain points
+
+### 2. Optimize Marketing Efforts
+- Focus campaigns on the top-performing 60–70 age segment
+- Enhance regional targeting by investing in high-growth cities
+
+### 3. Streamline Product Offerings
+- Prioritize stocking best-selling categories (Electronics)
+- Discontinue underperforming items based on category treemap analysis
+- Refine pricing strategies using demand and spending pattern data
+
+---
+
+## 🛠️ Tech Stack
+
+![Python](https://img.shields.io/badge/Python-3776AB?style=flat&logo=python&logoColor=white)
+![Jupyter](https://img.shields.io/badge/Jupyter-F37626?style=flat&logo=jupyter&logoColor=white)
+![Pandas](https://img.shields.io/badge/Pandas-150458?style=flat&logo=pandas&logoColor=white)
+![NumPy](https://img.shields.io/badge/NumPy-013243?style=flat&logo=numpy&logoColor=white)
+![Power BI](https://img.shields.io/badge/Power%20BI-F2C811?style=flat&logo=powerbi&logoColor=black)
+![DAX](https://img.shields.io/badge/DAX-Data%20Analysis-yellow?style=flat)
+
+---
+
+## 📁 Project Structure
+
+```
+ecommerce-analytics/
+├── data/
+│   ├── raw/                    # Original synthetic dataset
+│   └── processed/
+│       └── customer_segments.csv   # Segmentation engine output
+├── notebooks/
+│   └── customer_segmentation.ipynb # 🧠 Segmentation engine
+├── powerbi/
+│   └── dashboard.pbix          # Power BI report file
+└── README.md
+```
