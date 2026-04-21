@@ -147,11 +147,12 @@ Raw Data → Data Wrangler → Feature Engineering → Statistical Analysis → 
 ecommerce-analytics/
 ├── data/
 │   ├── synthetic_online_retail_data                    # Original synthetic dataset
-│   └── processed/
-│       └── customer_segments.csv   # Segmentation engine output
+│   └── cleaned_and_uncleaned_data_from_data_wrangler
+│   └── customer_segments.csv 
 ├── notebooks/
 │   └── customer_segmentation.ipynb # 🧠 Segmentation engine
+|   └── Project_1.ipynb 
 ├── powerbi/
-│   └── dashboard.pbix          # Power BI report file
+│   └── Project_1.pbix          # Power BI report file
 └── README.md
 ```
