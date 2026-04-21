@@ -146,7 +146,7 @@ Raw Data → Data Wrangler → Feature Engineering → Statistical Analysis → 
 ```
 ecommerce-analytics/
 ├── data/
-│   ├── raw/                    # Original synthetic dataset
+│   ├── synthetic_online_retail_data                    # Original synthetic dataset
 │   └── processed/
 │       └── customer_segments.csv   # Segmentation engine output
 ├── notebooks/
